@@ -10,22 +10,28 @@ describe 'elasticsearch' do
   } }
 
   describe 'Test default settings  ' do
-    it 'should install elasticsearch package' do should contain_package('elasticsearch-server').with_ensure('present') end
-    it 'should run elasticsearch service' do should contain_service('sshd').with_ensure('running') end
-    it 'should enable elasticsearch service at boot' do should contain_service('sshd').with_enable('true') end
+    it 'should not install elasticsearch package' do should_not contain_package('elasticsearch').with_ensure('present') end
+    it 'should run elasticsearch service' do should contain_service('elasticsearch').with_ensure('running') end
+    it 'should enable elasticsearch service at boot' do should contain_service('elasticsearch').with_enable('true') end
     it 'should manage config file presence' do should contain_file('elasticsearch.conf').with_ensure('present') end
   end
 
-  describe 'Test installation of a specific version' do
-    let(:params) { {:version => '1.0.42' } }
-    it { should contain_package('elasticsearch-server').with_ensure('1.0.42') }
+  describe 'Test installation of a specific package version' do
+    let(:params) { {
+      :install => 'package',
+      :version => '1.0.42',
+    } }
+    it { should contain_package('elasticsearch').with_ensure('1.0.42') }
   end
 
-  describe 'Test decommissioning' do
-    let(:params) { {:ensure => 'absent'} }
-    it 'should remove Package[elasticsearch]' do should contain_package('elasticsearch-server').with_ensure('absent') end
-    it 'should stop Service[elasticsearch]' do should contain_service('sshd').with_ensure('stopped') end
-    it 'should not manage at boot Service[elasticsearch]' do should contain_service('sshd').with_enable(nil) end
+  describe 'Test decommissioning of package installation' do
+    let(:params) { {
+      :ensure => 'absent',
+      :install => 'package',
+    } }
+    it 'should remove Package[elasticsearch]' do should contain_package('elasticsearch').with_ensure('absent') end
+    it 'should stop Service[elasticsearch]' do should contain_service('elasticsearch').with_ensure('stopped') end
+    it 'should not manage at boot Service[elasticsearch]' do should contain_service('elasticsearch').with_enable(nil) end
     it 'should remove elasticsearch configuration file' do should contain_file('elasticsearch.conf').with_ensure('absent') end
   end
 
@@ -34,15 +40,8 @@ describe 'elasticsearch' do
       :service_ensure => 'stopped',
       :service_enable => false,
     } }
-    it 'should stop Service[elasticsearch]' do should contain_service('sshd').with_ensure('stopped') end
-    it 'should not enable at boot Service[elasticsearch]' do should contain_service('sshd').with_enable('false') end
-  end
-
-  describe 'Test noop mode' do
-    let(:params) { {:noop => true} }
-    it { should contain_package('elasticsearch-server').with_noop('true') }
-    it { should contain_service('sshd').with_noop('true') }
-    it { should contain_file('elasticsearch.conf').with_noop('true') }
+    it 'should stop Service[elasticsearch]' do should contain_service('elasticsearch').with_ensure('stopped') end
+    it 'should not enable at boot Service[elasticsearch]' do should contain_service('elasticsearch').with_enable('false') end
   end
 
   describe 'Test custom file via template' do
@@ -80,7 +79,7 @@ describe 'elasticsearch' do
   describe 'Test service subscribe' do
     let(:params) { {:service_subscribe => false } }
     it 'should not automatically restart the service when files change' do
-      should contain_service('sshd').with_subscribe(false)
+      should contain_service('elasticsearch').with_subscribe(false)
     end
   end
 

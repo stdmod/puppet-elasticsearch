@@ -16,6 +16,19 @@ class elasticsearch (
   $audit               = undef,
   $noop                = undef,
 
+  $install             = 'package',
+  $install_base_url    = $elasticsearch::params::install_base_url,
+  $install_source      = undef,
+  $install_destination = '/opt',
+
+  $user                = 'elasticsearch',
+  $user_create         = true,
+  $user_uid            = undef,
+  $user_gid            = undef,
+  $user_groups         = undef,
+
+  $java_heap_size      = '1024',
+
   $package             = $elasticsearch::params::package,
   $package_provider    = undef,
 
@@ -24,6 +37,11 @@ class elasticsearch (
   $service_enable      = true,
   $service_subscribe   = $elasticsearch::params::service_subscribe,
   $service_provider    = undef,
+
+  $init_script_file           = '/etc/init.d/elasticsearch',
+  $init_script_file_template  = 'elasticsearch/init.erb',
+  $init_options_file          = $elasticsearch::params::init_options_file,
+  $init_options_file_template = 'elasticsearch/init_options.erb',
 
   $file                = $elasticsearch::params::file,
   $file_owner          = $elasticsearch::params::file_owner,
@@ -40,21 +58,21 @@ class elasticsearch (
   $dir_purge           = false,
   $dir_recurse         = true,
 
-  $dependency_class    = undef,
+  $dependency_class    = 'elasticsearch::dependency',
   $monitor_class       = 'elasticsearch::monitor',
   $firewall_class      = 'elasticsearch::firewall',
   $my_class            = undef,
 
   $monitor             = false,
   $monitor_host        = $::ipaddress,
-  $monitor_port        = 22,
+  $monitor_port        = 9200,
   $monitor_protocol    = tcp,
   $monitor_tool        = '',
 
   $firewall            = false,
   $firewall_src        = '0/0',
   $firewall_dst        = '0/0',
-  $firewall_port       = 22,
+  $firewall_port       = 9200,
   $firewall_protocol   = tcp
 
   ) inherits elasticsearch::params {
@@ -62,6 +80,7 @@ class elasticsearch (
 
   # Input parameters validation
   validate_re($ensure, ['present','absent'], 'Valid values are: present, absent. WARNING: If set to absent all the resources managed by the module are removed.')
+  validate_re($install, ['package','upstream'], 'Valid values are: package, upstream.')
   validate_bool($service_enable)
   validate_bool($dir_recurse)
   validate_bool($dir_purge)
@@ -96,6 +115,31 @@ class elasticsearch (
     $file_ensure = present
   }
 
+  $managed_install_source = $elasticsearch::install_source ? {
+    ''      => "${elasticsearch::install_base_url}/elasticsearch-${elasticsearch::version}.zip",
+    default => $elasticsearch::install_source,
+  }
+
+  $created_dir = url_parse($managed_install_source,'filedir')
+  $home_dir = "${elasticsearch::install_destination}/${elasticsearch::created_dir}"
+
+  $managed_file = $elasticsearch::install ? {
+    package => $elasticsearch::file,
+    default => "${elasticsearch::home_dir}/config/elasticsearch.yml",
+  }
+
+  $managed_dir = $elasticsearch::dir ? {
+    ''      => $elasticsearch::install ? {
+      package => $elasticsearch::dir,
+      default => "${elasticsearch::home_dir}/config/",
+    },
+    default => $elasticsearch::dir,
+  }
+
+  $managed_service_provider = $install ? {
+    /(?i:upstream|puppi)/ => 'init',
+    default               => undef,
+  }
 
   # Resources Managed
   class { 'elasticsearch::install':

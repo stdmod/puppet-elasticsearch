@@ -8,12 +8,21 @@ Refer to http://github.com/stdmod/
 
 Released under the terms of Apache 2 License.
 
+NOTE: This module is to be considered a POC, that uses the stdmod naming conventions.
+For development time reasons the module currently uses some Example42 modules and prerequisites.
 
 ## USAGE - Basic management
 
-* Install elasticsearch with default settings (package installed, service started, default configuration files)
+* Install elasticsearch with default package, settings and dependencies
 
         class { 'elasticsearch': }
+
+* Install elasticsearch fetching the upstream tarball
+
+        class { 'elasticsearch':
+          install => 'upstream',
+          version => '0.90.2',
+        }
 
 * Remove elasticsearch package and purge all the managed files
 
@@ -21,28 +30,39 @@ Released under the terms of Apache 2 License.
           ensure => absent,
         }
 
-* Install a specific version of elasticsearch package
+* Create an elasticsearch user with defined settings
 
         class { 'elasticsearch':
-          version => '1.0.1',
+          install     => 'upstream',
+          user_create => true, # Default
+          user_uid    => '899',
         }
 
-* Install the latest version of elasticsearch package
+* Do not create an elasticsearch user when installing via upstream
+  (You must provide it in othr ways)
 
         class { 'elasticsearch':
-          version => 'latest',
+          install     => 'upstream',
+          user_create => false,
         }
 
-* Enable elasticsearch service. This is default.
+* Manage Java settings
 
         class { 'elasticsearch':
-          service_ensure => 'running',
+          java_heap_size => '2048', # Default: 1024
         }
 
-* Enable elasticsearch service at boot. This is default.
+* Specify a custom template to use for the init script and its path
 
         class { 'elasticsearch':
-          service_status => 'enabled',
+          init_script_file           = '/etc/init.d/elasticsearch', # Default
+          init_script_file_template  = 'site/elasticsearch/init.erb',
+        }
+
+* Provide a custom configuration file for the init script (here you can better tune Java settings)
+
+        class { 'elasticsearch':
+          init_options_file_template  = 'site/elasticsearch/init_options.erb',
         }
 
 
@@ -52,7 +72,7 @@ Released under the terms of Apache 2 License.
           service_subscribe => false,
         }
 
-* Enable auditing (on all the arguments)  without making changes on existing elasticsearch configuration *files*
+* Enable auditing (on all the arguments)
 
         class { 'elasticsearch':
           audit => 'all',
@@ -66,11 +86,11 @@ Released under the terms of Apache 2 License.
 
 
 ## USAGE - Overrides and Customizations
-* Use custom source for main configuration file 
+* Use custom source for main configuration file
 
         class { 'elasticsearch':
           file_source => [ "puppet:///modules/example42/elasticsearch/elasticsearch.conf-${hostname}" ,
-                           "puppet:///modules/example42/elasticsearch/elasticsearch.conf" ], 
+                           "puppet:///modules/example42/elasticsearch/elasticsearch.conf" ],
         }
 
 
@@ -124,8 +144,33 @@ Released under the terms of Apache 2 License.
   Note: Use a subclass name different than elasticsearch to avoid order loading issues.
 
         class { 'elasticsearch':
-         my_class => 'site::elasticsearch_my',
+          my_class => 'site::my_elasticsearch',
         }
+
+* Specify an alternative class where elasticsearch monitoring is managed
+
+        class { 'elasticsearch':
+          monitor_class => 'site::monitor::elasticsearch',
+        }
+
+* Enable and configure monitoring (with default elasticsearch::monitor)
+
+        class { 'elasticsearch':
+          monitor             = true,                  # Default: false
+          monitor_host        = $::ipaddress_eth0,     # Default: $::ipaddress
+          monitor_port        = 9200,                  # Default
+          monitor_tool        = [ 'nagios' , 'monit' ] # Default: ''
+        }
+
+* Enable and configure firewalling (with default elasticsearch::firewall)
+
+        class { 'elasticsearch':
+          firewall             = true,                  # Default: false
+          firewall_src         = '10.0.0.0/24,          # Default: 0/0
+          firewall_dst         = $::ipaddress_eth0,     # Default: 0/0
+          firewall_port        = 9200,                  # Default
+        }
+
 
 ## TESTING
 [![Build Status](https://travis-ci.org/stdmod/puppet-elasticsearch.png?branch=master)](https://travis-ci.org/stdmod/puppet-elasticsearch)

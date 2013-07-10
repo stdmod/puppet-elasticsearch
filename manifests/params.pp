@@ -4,39 +4,31 @@
 #
 class elasticsearch::params {
 
-  $package = $::osfamily ? {
-    Suse    => 'elasticsearch',
-    OpenBSD => '',
-    default => 'elasticsearch-server',
-  }
+  $install_base_url = 'https://download.elasticsearch.org/elasticsearch/elasticsearch/'
 
-  $service = $::osfamily ? {
-    Debian  => 'ssh',
-    default => 'sshd',
-  }
+  $package = 'elasticsearch'
+
+  $service = 'elasticsearch'
 
   $service_subscribe = Class['elasticsearch::config']
 
   $file = $::osfamily ? {
-    default => '/etc/ssh/sshd_config',
+    default => '/etc/elasticsearch/elasticsearch.yml',
   }
 
-  $file_mode = $::osfamily ? {
-    Suse    => '0640',
-    OpenBSD => '0644',
-    default => '0600',
+  $init_options_file = $::osfamily ? {
+    Debian  => '/etc/default/elasticsearch',
+    default => '/etc/sysconfig/elasticsearch',
   }
 
-  $file_owner = $::osfamily ? {
-    default => 'root',
-  }
+  $file_mode = '0644'
 
-  $file_group = $::osfamily ? {
-    default => 'root',
-  }
+  $file_owner = 'root'
+
+  $file_group = 'root'
 
   $dir = $::osfamily ? {
-    default => '/etc/ssh',
+    default => '/etc/elasticsearch/',
   }
 
 }
