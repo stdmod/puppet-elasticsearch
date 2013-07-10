@@ -10,7 +10,7 @@ describe 'elasticsearch' do
   } }
 
   describe 'Test default settings  ' do
-    it 'should not install elasticsearch package' do should_not contain_package('elasticsearch').with_ensure('present') end
+    it 'should install elasticsearch package' do should contain_package('elasticsearch').with_ensure('present') end
     it 'should run elasticsearch service' do should contain_service('elasticsearch').with_ensure('running') end
     it 'should enable elasticsearch service at boot' do should contain_service('elasticsearch').with_enable('true') end
     it 'should manage config file presence' do should contain_file('elasticsearch.conf').with_ensure('present') end
