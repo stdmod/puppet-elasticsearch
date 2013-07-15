@@ -81,6 +81,7 @@ class elasticsearch (
   # Input parameters validation
   validate_re($ensure, ['present','absent'], 'Valid values are: present, absent. WARNING: If set to absent all the resources managed by the module are removed.')
   validate_re($install, ['package','upstream'], 'Valid values are: package, upstream.')
+  validate_re($service_ensure, ['running','stopped'], 'Valid values are: running, stopped')
   validate_bool($service_enable)
   validate_bool($dir_recurse)
   validate_bool($dir_purge)
