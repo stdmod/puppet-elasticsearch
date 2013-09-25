@@ -59,21 +59,13 @@ class elasticsearch (
   $dir_recurse         = true,
 
   $dependency_class    = 'elasticsearch::dependency',
-  $monitor_class       = 'elasticsearch::monitor',
-  $firewall_class      = 'elasticsearch::firewall',
   $my_class            = undef,
 
-  $monitor             = false,
-  $monitor_host        = $::ipaddress,
-  $monitor_port        = 9200,
-  $monitor_protocol    = tcp,
-  $monitor_tool        = '',
+  $monitor_class       = '',
+  $monitor_options_hash = { },
 
   $firewall            = false,
-  $firewall_src        = '0/0',
-  $firewall_dst        = '0/0',
-  $firewall_port       = 9200,
-  $firewall_protocol   = tcp
+  $firewall_options_hash = { },
 
   ) inherits elasticsearch::params {
 
@@ -159,11 +151,11 @@ class elasticsearch (
     include $elasticsearch::dependency_class
   }
 
-  if $elasticsearch::monitor and $elasticsearch::monitor_class {
+  if $elasticsearch::monitor_class {
     include $elasticsearch::monitor_class
   }
 
-  if $elasticsearch::firewall and $elasticsearch::firewall_class {
+  if $elasticsearch::firewall_class {
     include $elasticsearch::firewall_class
   }
 
